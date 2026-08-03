@@ -8,9 +8,9 @@ FloodRoad and LeafGuard are two AI image classification tools made for the NVIDI
 
 Both tools can classify saved images or use a USB webcam for live results.
 
-![FloodRoad test result](python/training/classification/data/test_images/floodroad_best_results/0.jpg)
+![FloodRoad test result](images/floodroad-result.jpg)
 
-![LeafGuard test result](python/training/classification/data/test_images/leafguard_best_results/0.jpg)
+![LeafGuard test result](images/leafguard-result.jpg)
 
 ## The Algorithm
 
@@ -22,13 +22,13 @@ The datasets are divided into three folders:
 - `val` checks the model during training.
 - `test` checks the finished model with images it did not train on.
 
-The FloodRoad classes are `Flooded` and `Normal`. The LeafGuard classes are `Diseased` and `Healthy`. Keeping both classes balanced helps stop the model from choosing one answer too often.
+The FloodRoad classes are `Flooded` and `Normal`. The LeafGuard classes are `Diseased` and `Healthy`. I tested the finished models with images that were not used for training, including real-world images with natural backgrounds.
 
 The `train.py` program retrains each model. The `onnx_export.py` program changes the trained model into ONNX format so Jetson Inference can run it. The final model files are:
 
 ```text
 python/training/classification/models/floodroad/resnet18.onnx
-python/training/classification/models/leafguard_balanced/resnet18.onnx
+python/training/classification/models/leafguard_v2/resnet18.onnx
 ```
 
 For live video, `road_camera.py` and `leaf_camera.py` read frames from `/dev/video0`. The model classifies each frame and returns a class name and confidence score. The result is written on the frame and sent to a browser with WebRTC on port `8554`.
@@ -39,12 +39,12 @@ For live video, `road_camera.py` and `leaf_camera.py` read frames from `/dev/vid
 python/training/classification/
 |-- data/
 |   |-- floodroad/
-|   |-- leafguard_balanced/
+|   |-- leafguard_v2/
 |   |-- road_camera.py
 |   `-- leaf_camera.py
 |-- models/
 |   |-- floodroad/resnet18.onnx
-|   `-- leafguard_balanced/resnet18.onnx
+|   `-- leafguard_v2/resnet18.onnx
 |-- train.py
 `-- onnx_export.py
 ```
@@ -81,21 +81,21 @@ cd /opt/jetson-inference/python/training/classification
 
 ```bash
 python3 train.py --model-dir=models/floodroad data/floodroad
-python3 train.py --model-dir=models/leafguard_balanced data/leafguard_balanced
+python3 train.py --model-dir=models/leafguard_v2 data/leafguard_v2
 ```
 
 4. Export both models to ONNX.
 
 ```bash
 python3 onnx_export.py --model-dir=models/floodroad
-python3 onnx_export.py --model-dir=models/leafguard_balanced
+python3 onnx_export.py --model-dir=models/leafguard_v2
 ```
 
 5. Check that both ONNX files were created.
 
 ```bash
 ls models/floodroad/resnet18.onnx
-ls models/leafguard_balanced/resnet18.onnx
+ls models/leafguard_v2/resnet18.onnx
 ```
 
 ## Running This Project
@@ -124,18 +124,18 @@ imagenet --model=models/floodroad/resnet18.onnx \
 ```bash
 cd /opt/jetson-inference/python/training/classification
 
-mkdir -p data/leafguard_balanced/test_output_healthy
-mkdir -p data/leafguard_balanced/test_output_diseased
+mkdir -p data/leafguard_v2/test_output_healthy
+mkdir -p data/leafguard_v2/test_output_diseased
 
-imagenet --model=models/leafguard_balanced/resnet18.onnx \
+imagenet --model=models/leafguard_v2/resnet18.onnx \
   --input_blob=input_0 --output_blob=output_0 \
-  --labels=data/leafguard_balanced/labels.txt \
-  data/leafguard_balanced/test/Healthy data/leafguard_balanced/test_output_healthy
+  --labels=data/leafguard_v2/labels.txt \
+  data/leafguard_v2/test/Healthy data/leafguard_v2/test_output_healthy
 
-imagenet --model=models/leafguard_balanced/resnet18.onnx \
+imagenet --model=models/leafguard_v2/resnet18.onnx \
   --input_blob=input_0 --output_blob=output_0 \
-  --labels=data/leafguard_balanced/labels.txt \
-  data/leafguard_balanced/test/Diseased data/leafguard_balanced/test_output_diseased
+  --labels=data/leafguard_v2/labels.txt \
+  data/leafguard_v2/test/Diseased data/leafguard_v2/test_output_diseased
 ```
 
 ### Run FloodRoad With a Webcam
@@ -160,7 +160,6 @@ python3 data/leaf_camera.py \
   --output=webrtc://@:8554/leaf \
   --output-codec=vp8 \
   --headless
-```
 
 Open `http://JETSON_IP:8554` in Google Chrome. Only run one webcam program at a time. If the terminal says it cannot resolve a random `.local` address, open `chrome://flags/#enable-webrtc-hide-local-ips-with-mdns`, set **Anonymize local IPs exposed by WebRTC** to **Disabled**, and relaunch Chrome.
 
@@ -173,6 +172,7 @@ The models work well on many test images, but they are not perfect. FloodRoad ma
 [View the final video demonstration here](ADD_FINAL_VIDEO_LINK_HERE)
 
 ## References
+
 - [Jetson Inference](https://github.com/dusty-nv/jetson-inference)
 - iD Tech Gameplan: NVIDIA AI and Machine Learning Academy
 - Kaggle datasets listed above
