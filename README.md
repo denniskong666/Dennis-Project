@@ -162,12 +162,6 @@ python3 data/leaf_camera.py \
   --headless
 ```
 
-Find the Jetson IP address with:
-
-```bash
-hostname -I
-```
-
 Open `http://JETSON_IP:8554` in Google Chrome. Only run one webcam program at a time. If the terminal says it cannot resolve a random `.local` address, open `chrome://flags/#enable-webrtc-hide-local-ips-with-mdns`, set **Anonymize local IPs exposed by WebRTC** to **Disabled**, and relaunch Chrome.
 
 ## Results and Limits
