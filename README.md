@@ -145,6 +145,10 @@ Connect the USB webcam and run:
 ```bash
 python3 data/road_camera.py \
   --input=/dev/video0 \
+  --input-codec=mjpeg \
+  --input-width=1280 \
+  --input-height=720 \
+  --input-rate=30 \
   --output=webrtc://@:8554/road \
   --output-codec=h264 \
   --headless
@@ -157,6 +161,10 @@ Stop FloodRoad with `Ctrl+C`, then run:
 ```bash
 python3 data/leaf_camera.py \
   --input=/dev/video0 \
+  --input-codec=mjpeg \
+  --input-width=1280 \
+  --input-height=720 \
+  --input-rate=30 \
   --output=webrtc://@:8554/leaf \
   --output-codec=h264 \
   --headless
