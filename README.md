@@ -12,6 +12,34 @@ Both tools can classify saved images or use a USB webcam for live results.
 
 ![LeafGuard test result](test_images/leafguard_result.jpg)
 
+## Datasets
+
+The road images came from Kaggle flood and road datasets. The final leaf dataset uses real-world tomato leaf images from the Tomato PlantDoc dataset. Images were placed into the correct class folders and split into `train`, `val`, and `test` folders with the Gameplan `split-dataset.py` program.
+
+Dataset references:
+
+- [Roadway Flooding Image Dataset](https://www.kaggle.com/datasets/saurabhshahane/roadway-flooding-image-dataset)
+- [Road Condition Alert Dataset](https://www.kaggle.com/datasets/saadkhan0/road-conditionalert-dataset)
+- [Flood Classification Dataset](https://www.kaggle.com/datasets/dhawalsrivastava2583/flood-classification-dataset)
+- [Tomato PlantDoc Dataset](https://www.kaggle.com/datasets/abdulhasibuddin/tomatoplantdocdataset)
+
+
+## Project Files
+
+```text
+python/training/classification/
+|-- data/
+|   |-- floodroad/
+|   |-- leafguard_v2/
+|   |-- road_camera.py
+|   `-- leaf_camera.py
+|-- models/
+|   |-- floodroad/resnet18.onnx
+|   `-- leafguard_v2/resnet18.onnx
+|-- train.py
+`-- onnx_export.py
+```
+
 ## The Algorithm
 
 Both projects use image classification and transfer learning with a ResNet-18 deep neural network. ResNet-18 was already trained to recognize image features such as shapes, colors, and textures. I retrained it with my own two-class datasets so it could solve these new problems.
@@ -33,32 +61,7 @@ python/training/classification/models/leafguard_v2/resnet18.onnx
 
 For live video, `road_camera.py` and `leaf_camera.py` read frames from `/dev/video0`. The model classifies each frame and returns a class name and confidence score. The result is written on the frame and sent to a browser with WebRTC on port `8554`.
 
-## Project Files
 
-```text
-python/training/classification/
-|-- data/
-|   |-- floodroad/
-|   |-- leafguard_v2/
-|   |-- road_camera.py
-|   `-- leaf_camera.py
-|-- models/
-|   |-- floodroad/resnet18.onnx
-|   `-- leafguard_v2/resnet18.onnx
-|-- train.py
-`-- onnx_export.py
-```
-
-## Datasets
-
-The road images came from Kaggle flood and road datasets. The final leaf dataset uses real-world tomato leaf images from the Tomato PlantDoc dataset. Images were placed into the correct class folders and split into `train`, `val`, and `test` folders with the Gameplan `split-dataset.py` program.
-
-Dataset references:
-
-- [Roadway Flooding Image Dataset](https://www.kaggle.com/datasets/saurabhshahane/roadway-flooding-image-dataset)
-- [Road Condition Alert Dataset](https://www.kaggle.com/datasets/saadkhan0/road-conditionalert-dataset)
-- [Flood Classification Dataset](https://www.kaggle.com/datasets/dhawalsrivastava2583/flood-classification-dataset)
-- [Tomato PlantDoc Dataset](https://www.kaggle.com/datasets/abdulhasibuddin/tomatoplantdocdataset)
 
 ## Training the Models
 
@@ -105,9 +108,6 @@ ls models/leafguard_v2/resnet18.onnx
 ```bash
 cd /opt/jetson-inference/python/training/classification
 
-mkdir -p data/floodroad/test_output_flooded
-mkdir -p data/floodroad/test_output_normal
-
 imagenet --model=models/floodroad/resnet18.onnx \
   --input_blob=input_0 --output_blob=output_0 \
   --labels=data/floodroad/labels.txt \
@@ -123,9 +123,6 @@ imagenet --model=models/floodroad/resnet18.onnx \
 
 ```bash
 cd /opt/jetson-inference/python/training/classification
-
-mkdir -p data/leafguard_v2/test_output_healthy
-mkdir -p data/leafguard_v2/test_output_diseased
 
 imagenet --model=models/leafguard_v2/resnet18.onnx \
   --input_blob=input_0 --output_blob=output_0 \
