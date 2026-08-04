@@ -8,9 +8,9 @@ FloodRoad and LeafGuard are two AI image classification tools made for the NVIDI
 
 Both tools can classify saved images or use a USB webcam for live results.
 
-![FloodRoad test result](images/floodroad-result.jpg)
+![FloodRoad test result](test_images/floodroad-result.jpg)
 
-![LeafGuard test result](images/leafguard-result.jpg)
+![LeafGuard test result](test_images/leafguard-result.jpg)
 
 ## The Algorithm
 
