@@ -192,6 +192,10 @@ FloodRoad should help a person notice a possible danger. It should not replace e
 
 [View the final video demonstration here](https://drive.google.com/file/d/1JAIiIXyvj0VdDHY_8k1KAHMLy1o0MRdF/view?usp=drive_link)
 
+## Project Planning Worksheet
+
+[View my completed project planning worksheet](https://docs.google.com/document/d/13A4mVl8-K5jY2dum67D--QgQPkXoOmBcbepNchhr1gA/edit?usp=sharing)
+
 ## References
 
 - [Jetson Inference](https://github.com/dusty-nv/jetson-inference)
