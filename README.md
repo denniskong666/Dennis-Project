@@ -18,34 +18,37 @@ Dataset references:
 - [Road Condition Alert Dataset](https://www.kaggle.com/datasets/saadkhan0/road-conditionalert-dataset)
 - [Flood Classification Dataset](https://www.kaggle.com/datasets/dhawalsrivastava2583/flood-classification-dataset)
 
-The prepared dataset has this structure inside Jetson Inference:
-
-```text
-data/floodroad/
-|-- train/
-|   |-- Flooded/
-|   `-- Normal/
-|-- val/
-|   |-- Flooded/
-|   `-- Normal/
-|-- test/
-|   |-- Flooded/
-|   `-- Normal/
-`-- labels.txt
-```
+The prepared dataset is stored in the FloodRoad data folder inside Jetson Inference.
 
 ## Project Files
 
 ```text
-Dennis-Project/
-|-- models/
-|   `-- floodroad/
-|       |-- labels.txt
-|       `-- resnet18.onnx
-|-- test_images/
-|   `-- floodroad_result.jpg
-|-- road_camera.py
-`-- README.md
+jetson-inference/
+`-- python/
+    `-- training/
+        `-- classification/
+            |-- data/
+            |   |-- floodroad/
+            |   |   |-- train/
+            |   |   |   |-- Flooded/
+            |   |   |   `-- Normal/
+            |   |   |-- val/
+            |   |   |   |-- Flooded/
+            |   |   |   `-- Normal/
+            |   |   |-- test/
+            |   |   |   |-- Flooded/
+            |   |   |   `-- Normal/
+            |   |   `-- labels.txt
+            |   `-- road_camera.py
+            |-- models/
+            |   `-- floodroad/
+            |       |-- tensorboard/
+            |       |-- checkpoint.pth.tar
+            |       |-- model_best.pth.tar
+            |       |-- labels.txt
+            |       `-- resnet18.onnx
+            |-- train.py
+            `-- onnx_export.py
 ```
 
 ## The Algorithm
@@ -64,12 +67,15 @@ For live video, `road_camera.py` reads frames from `/dev/video0`. The model clas
 
 ## Set Up the Project
 
-The NVIDIA Jetson Orin Nano, JetPack, `jetson-inference`, Python 3, Docker, and a USB webcam are required.
+The NVIDIA Jetson Orin Nano, JetPack, Python 3, Docker, and a USB webcam are required.
 
-Clone this repository on the Jetson:
+Clone Jetson Inference and this project repository on the Jetson:
 
 ```bash
 cd ~
+
+git clone --recursive --depth=1 https://github.com/dusty-nv/jetson-inference
+
 git clone https://github.com/denniskong666/Dennis-Project.git
 ```
 
@@ -77,6 +83,7 @@ Copy the project files into Jetson Inference:
 
 ```bash
 mkdir -p ~/jetson-inference/python/training/classification/models/floodroad
+mkdir -p ~/jetson-inference/python/training/classification/data/floodroad
 
 cp ~/Dennis-Project/road_camera.py \
   ~/jetson-inference/python/training/classification/data/road_camera.py
@@ -86,6 +93,9 @@ cp ~/Dennis-Project/models/floodroad/resnet18.onnx \
 
 cp ~/Dennis-Project/models/floodroad/labels.txt \
   ~/jetson-inference/python/training/classification/models/floodroad/labels.txt
+
+cp ~/Dennis-Project/models/floodroad/labels.txt \
+  ~/jetson-inference/python/training/classification/data/floodroad/labels.txt
 ```
 
 ## Train the Model
