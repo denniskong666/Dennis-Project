@@ -72,11 +72,7 @@ The NVIDIA Jetson Orin Nano, JetPack, Python 3, Docker, and a USB webcam are req
 Clone Jetson Inference and this project repository on the Jetson:
 
 ```bash
-cd ~
-
 git clone --recursive --depth=1 https://github.com/dusty-nv/jetson-inference
-
-git clone https://github.com/denniskong666/Dennis-Project.git
 ```
 
 Copy the project files into Jetson Inference:
