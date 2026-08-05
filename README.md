@@ -1,145 +1,166 @@
-# Dennis-Project
-# FloodRoad and LeafGuard
+# FloodRoad
 
-FloodRoad and LeafGuard are two AI image classification tools made for the NVIDIA Jetson Orin Nano.
+FloodRoad is an AI image classification project made for the NVIDIA Jetson Orin Nano. It classifies a road as `Flooded` or `Normal`.
 
-- **FloodRoad** classifies a road as `Flooded` or `Normal`. This can help emergency workers find dangerous roads after a storm.
-- **LeafGuard** classifies a tomato leaf as `Diseased` or `Healthy`. This can help a plant owner notice a problem before the plant becomes badly damaged.
+Flooded roads can be dangerous after a storm. FloodRoad can help emergency workers and drivers notice roads that may need to be checked first.
 
-Both tools can classify saved images or use a USB webcam for live results.
+The project can classify saved road images or use a USB webcam for live results.
 
 ![FloodRoad test result](test_images/floodroad_result.jpg)
 
-![LeafGuard test result](test_images/leafguard_result.jpg)
+## Dataset
 
-## Datasets
-
-The road images came from Kaggle flood and road datasets. The final leaf dataset uses real-world tomato leaf images from the Tomato PlantDoc dataset. Images were placed into the correct class folders and split into `train`, `val`, and `test` folders with the Gameplan `split-dataset.py` program.
+The road images came from Kaggle flood and road datasets. I placed the images into `Flooded` and `Normal` classes. I then created balanced `train`, `val`, and `test` folders so the model could learn and be tested fairly.
 
 Dataset references:
 
 - [Roadway Flooding Image Dataset](https://www.kaggle.com/datasets/saurabhshahane/roadway-flooding-image-dataset)
 - [Road Condition Alert Dataset](https://www.kaggle.com/datasets/saadkhan0/road-conditionalert-dataset)
 - [Flood Classification Dataset](https://www.kaggle.com/datasets/dhawalsrivastava2583/flood-classification-dataset)
-- [Tomato PlantDoc Dataset](https://www.kaggle.com/datasets/abdulhasibuddin/tomatoplantdocdataset)
 
+The prepared dataset has this structure inside Jetson Inference:
+
+```text
+data/floodroad/
+|-- train/
+|   |-- Flooded/
+|   `-- Normal/
+|-- val/
+|   |-- Flooded/
+|   `-- Normal/
+|-- test/
+|   |-- Flooded/
+|   `-- Normal/
+`-- labels.txt
+```
 
 ## Project Files
 
 ```text
-python/training/classification/
-|-- data/
-|   |-- floodroad/
-|   |-- leafguard_v2/
-|   |-- road_camera.py
-|   `-- leaf_camera.py
+Dennis-Project/
 |-- models/
-|   |-- floodroad/resnet18.onnx
-|   `-- leafguard_v2/resnet18.onnx
-|-- train.py
-`-- onnx_export.py
+|   `-- floodroad/
+|       |-- labels.txt
+|       `-- resnet18.onnx
+|-- test_images/
+|   `-- floodroad_result.jpg
+|-- road_camera.py
+`-- README.md
 ```
 
 ## The Algorithm
 
-Both projects use image classification and transfer learning with a ResNet-18 deep neural network. ResNet-18 was already trained to recognize image features such as shapes, colors, and textures. I retrained it with my own two-class datasets so it could solve these new problems.
+FloodRoad uses image classification and transfer learning with a ResNet-18 deep neural network. ResNet-18 was already trained to recognize image features such as shapes, colors, and textures. I retrained it with road images so it could recognize flooded and normal roads.
 
-The datasets are divided into three folders:
+The dataset is divided into three folders:
 
 - `train` teaches the model.
 - `val` checks the model during training.
 - `test` checks the finished model with images it did not train on.
 
-The FloodRoad classes are `Flooded` and `Normal`. The LeafGuard classes are `Diseased` and `Healthy`. I tested the finished models with images that were not used for training, including real-world images with natural backgrounds.
+The `train.py` program trains the model. The `onnx_export.py` program changes the trained model into ONNX format so Jetson Inference can run it. The final model is `models/floodroad/resnet18.onnx`.
 
-The `train.py` program retrains each model. The `onnx_export.py` program changes the trained model into ONNX format so Jetson Inference can run it. The final model files are:
+For live video, `road_camera.py` reads frames from `/dev/video0`. The model classifies each frame and shows the class name and confidence score. It sends the result to a browser with WebRTC on port `8554`.
 
-```text
-python/training/classification/models/floodroad/resnet18.onnx
-python/training/classification/models/leafguard_v2/resnet18.onnx
+## Set Up the Project
+
+The NVIDIA Jetson Orin Nano, JetPack, `jetson-inference`, Python 3, Docker, and a USB webcam are required.
+
+Clone this repository on the Jetson:
+
+```bash
+cd ~
+git clone https://github.com/denniskong666/Dennis-Project.git
 ```
 
-For live video, `road_camera.py` and `leaf_camera.py` read frames from `/dev/video0`. The model classifies each frame and returns a class name and confidence score. The result is written on the frame and sent to a browser with WebRTC on port `8554`.
+Copy the project files into Jetson Inference:
 
+```bash
+mkdir -p ~/jetson-inference/python/training/classification/models/floodroad
 
+cp ~/Dennis-Project/road_camera.py \
+  ~/jetson-inference/python/training/classification/data/road_camera.py
 
-## Training the Models
+cp ~/Dennis-Project/models/floodroad/resnet18.onnx \
+  ~/jetson-inference/python/training/classification/models/floodroad/resnet18.onnx
 
-The NVIDIA Jetson Orin Nano, JetPack, `jetson-inference`, Python 3, Docker, and the image datasets are required.
+cp ~/Dennis-Project/models/floodroad/labels.txt \
+  ~/jetson-inference/python/training/classification/models/floodroad/labels.txt
+```
 
-1. Open a terminal and start the Jetson Inference Docker container.
+## Train the Model
+
+Place the prepared dataset at:
+
+```text
+~/jetson-inference/python/training/classification/data/floodroad
+```
+
+Start the Jetson Inference Docker container:
 
 ```bash
 cd ~/jetson-inference
 ./docker/run.sh
 ```
 
-2. Go to the classification training folder inside Docker.
+Inside Docker, go to the classification folder and train for 50 epochs:
 
 ```bash
 cd /opt/jetson-inference/python/training/classification
+
+python3 train.py \
+  --epochs=50 \
+  --model-dir=models/floodroad \
+  data/floodroad
 ```
 
-3. Train both models.
+Export the trained model to ONNX:
 
 ```bash
-python3 train.py --model-dir=models/floodroad data/floodroad
-python3 train.py --model-dir=models/leafguard_v2 data/leafguard_v2
+python3 onnx_export.py \
+  --model-dir=models/floodroad
 ```
 
-4. Export both models to ONNX.
-
-```bash
-python3 onnx_export.py --model-dir=models/floodroad
-python3 onnx_export.py --model-dir=models/leafguard_v2
-```
-
-5. Check that both ONNX files were created.
+Check that the model was created:
 
 ```bash
 ls models/floodroad/resnet18.onnx
-ls models/leafguard_v2/resnet18.onnx
 ```
 
-## Running This Project
+## Test Saved Images
 
-### Test FloodRoad Images
+Run these commands inside the Docker container:
 
 ```bash
 cd /opt/jetson-inference/python/training/classification
 
-imagenet --model=models/floodroad/resnet18.onnx \
-  --input_blob=input_0 --output_blob=output_0 \
-  --labels=data/floodroad/labels.txt \
-  data/floodroad/test/Flooded data/floodroad/test_output_flooded
+mkdir -p data/floodroad/test_output_flooded
+mkdir -p data/floodroad/test_output_normal
 
-imagenet --model=models/floodroad/resnet18.onnx \
-  --input_blob=input_0 --output_blob=output_0 \
+imagenet \
+  --model=models/floodroad/resnet18.onnx \
+  --input_blob=input_0 \
+  --output_blob=output_0 \
   --labels=data/floodroad/labels.txt \
-  data/floodroad/test/Normal data/floodroad/test_output_normal
+  data/floodroad/test/Flooded \
+  data/floodroad/test_output_flooded
+
+imagenet \
+  --model=models/floodroad/resnet18.onnx \
+  --input_blob=input_0 \
+  --output_blob=output_0 \
+  --labels=data/floodroad/labels.txt \
+  data/floodroad/test/Normal \
+  data/floodroad/test_output_normal
 ```
 
-### Test LeafGuard Images
+## Run With a Webcam
+
+Connect the USB webcam and run this command inside Docker:
 
 ```bash
 cd /opt/jetson-inference/python/training/classification
 
-imagenet --model=models/leafguard_v2/resnet18.onnx \
-  --input_blob=input_0 --output_blob=output_0 \
-  --labels=data/leafguard_v2/labels.txt \
-  data/leafguard_v2/test/Healthy data/leafguard_v2/test_output_healthy
-
-imagenet --model=models/leafguard_v2/resnet18.onnx \
-  --input_blob=input_0 --output_blob=output_0 \
-  --labels=data/leafguard_v2/labels.txt \
-  data/leafguard_v2/test/Diseased data/leafguard_v2/test_output_diseased
-```
-
-### Run FloodRoad With a Webcam
-
-Connect the USB webcam and run:
-
-```bash
 python3 data/road_camera.py \
   --input=/dev/video0 \
   --input-codec=mjpeg \
@@ -151,27 +172,15 @@ python3 data/road_camera.py \
   --headless
 ```
 
-### Run LeafGuard With a Webcam
+Open `http://JETSON_IP:8554` in Google Chrome. Replace `JETSON_IP` with the Jetson's IP address. Press `Ctrl+C` in the terminal to stop the program.
 
-Stop FloodRoad with `Ctrl+C`, then run:
-
-```bash
-python3 data/leaf_camera.py \
-  --input=/dev/video0 \
-  --input-codec=mjpeg \
-  --input-width=1280 \
-  --input-height=720 \
-  --input-rate=30 \
-  --output=webrtc://@:8554/leaf \
-  --output-codec=h264 \
-  --headless
-```
-
-Open `http://JETSON_IP:8554` in Google Chrome. Only run one webcam program at a time. If the terminal says it cannot resolve a random `.local` address, open `chrome://flags/#enable-webrtc-hide-local-ips-with-mdns`, set **Anonymize local IPs exposed by WebRTC** to **Disabled**, and relaunch Chrome.
+If Chrome cannot resolve a random `.local` address, open `chrome://flags/#enable-webrtc-hide-local-ips-with-mdns`. Set **Anonymize local IPs exposed by WebRTC** to **Disabled**, and relaunch Chrome.
 
 ## Results and Limits
 
-The models work well on many test images, but they are not perfect. FloodRoad may have trouble when a normal road is wet or when flood water is hard to see. LeafGuard may have trouble when the leaf is very small, blurry, dark, or different from the tomato leaves in the training dataset. These tools should help a person make a decision, but they should not replace an expert or an official safety warning.
+FloodRoad works well on many road images, but it is not perfect. It may have trouble when a normal road is wet, when flood water is hard to see, or when the camera view does not mainly show a road. The confidence score shows how sure the model is about its answer, but it does not prove that the answer is correct.
+
+FloodRoad should help a person notice a possible danger. It should not replace emergency workers, road closures, or official safety warnings.
 
 ## Video Demonstration
 
